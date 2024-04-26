@@ -1,0 +1,12 @@
+[submodule "modules/comfyui_client"]
+	path = modules/comfyui_client
+	url = git@github.com:nick1udwig/comfyui_client.git
+[submodule "modules/comfyui_provider"]
+	path = modules/comfyui_provider
+	url = git@github.com:nick1udwig/comfyui_provider.git
+[submodule "modules/provider-dao-rollup"]
+	path = modules/provider-dao-rollup
+	url = git@github.com:nick1udwig/provider-dao-rollup.git
+[submodule "modules/provider_dao_router"]
+	path = modules/provider_dao_router
+	url = git@github.com:nick1udwig/provider_dao_router.git
