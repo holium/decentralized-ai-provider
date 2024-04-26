@@ -10,3 +10,6 @@
 [submodule "modules/provider_dao_router"]
 	path = modules/provider_dao_router
 	url = git@github.com:nick1udwig/provider_dao_router.git
+[submodule "contracts/lib/forge-std"]
+	path = contracts/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std

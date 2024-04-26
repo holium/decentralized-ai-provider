@@ -1,5 +1,3 @@
-/target
-
 # Compiler files
 cache/
 out/
@@ -14,5 +12,3 @@ docs/
 
 # Dotenv file
 .env
-
-*.swp
