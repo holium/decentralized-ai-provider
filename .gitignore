@@ -16,3 +16,6 @@ docs/
 .env
 
 *.swp
+
+node_modules
+.env
