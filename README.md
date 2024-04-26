@@ -41,10 +41,6 @@ curl -L https://foundry.paradigm.xyz | bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 cargo install --git https://github.com/kinode-dao/kit
 
-# boot a fakenode
-kit boot-fake-node -p 8080 --network-router-port 8090 --persist -f memedeck-router.os -h /tmp/memedeck-router
-kit boot-fake-node -p 8081 --network-router-port 8091 --persist -f memedeck-provider.os -h /tmp/memedeck-provider
-kit boot-fake-node -p 8082 --network-router-port 8092 --persist -f memedeck-client.os -h /tmp/memedeck-client
 ```
 
 ## Install kinode packages
@@ -58,6 +54,14 @@ kit bs provider_dao_router -p 8080
 kit bs comfyui_provider -p 8081
 ```
 
+## Start the provider & router
+
+```bash
+# boot a fakenode for the router, provider and client
+kit boot-fake-node -p 8080 --network-router-port 8090 --persist -f memedeck-router.os -h /tmp/memedeck-router
+kit boot-fake-node -p 8081 --network-router-port 8091 --persist -f memedeck-provider.os -h /tmp/memedeck-provider
+kit boot-fake-node -p 8082 --network-router-port 8092 --persist -f memedeck-client.os -h /tmp/memedeck-client
+```
 
 ## Start the client
 ```bash

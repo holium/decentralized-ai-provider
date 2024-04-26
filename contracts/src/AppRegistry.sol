@@ -1,56 +1,86 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.25;
 
+// import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "./interfaces/IAppRegistry.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract AppRegistry is Ownable {
-    struct Application {
-        string name;
-        address governanceToken;
-        address usageToken;
-        mapping(string => bool) processes;
-    }
 
-    mapping(string => Application) public applications;
+    mapping(string appId => ApplicationRecord appData) public applications;
+    mapping(string processId => string appId) public processToAppId;
 
-    event ApplicationRegistered(string namespace);
-    event ProcessAdded(string namespace, string process);
+    uint256 public applicationCount;
+
+    /*//////////////////////////////////////////////////////////////
+                                 EVENTS
+    //////////////////////////////////////////////////////////////*/
+
+    event ApplicationRegistered(string appId);
+    event ProcessAdded(string appId, string processId);
+
+    /*//////////////////////////////////////////////////////////////
+                                 ERRORS
+    //////////////////////////////////////////////////////////////*/
+    error ApplicationAlreadyRegistered();
+    error ApplicationNotRegistered();
+    error ProcessAlreadyRegistered();
+
+    constructor(address _owner) Ownable(_owner) {}
 
     function registerApplication(
-        string memory namespace,
+        string memory appId,
         string memory name,
         address governanceToken,
         address usageToken
-    ) external onlyOwner {
-        require(
-            applications[namespace].governanceToken == address(0),
-            "Application already registered"
-        );
+    ) external payable {
+        if (applications[appId].governanceToken != address(0)) {
+            revert ApplicationAlreadyRegistered();
+        }
 
-        Application storage app = applications[namespace];
+        ApplicationRecord storage app = applications[appId];
         app.name = name;
         app.governanceToken = governanceToken;
         app.usageToken = usageToken;
 
-        emit ApplicationRegistered(namespace);
+        emit ApplicationRegistered(appId);
     }
 
     function addProcess(
-        string memory namespace,
-        string memory process
-    ) external onlyOwner {
-        require(
-            applications[namespace].governanceToken != address(0),
-            "Application not registered"
-        );
-        require(
-            !applications[namespace].processes[process],
-            "Process already added"
-        );
+        string memory appId,
+        string memory processId
+    ) external payable {
+        if (applications[appId].governanceToken == address(0)) {
+            revert ApplicationNotRegistered();
+        }
 
-        applications[namespace].processes[process] = true;
+        // check that the processId is not already mapped to another appId
+        if (keccak256(abi.encodePacked(processToAppId[processId])) != keccak256(abi.encodePacked(""))) {
+            revert ProcessAlreadyRegistered();
+        }
 
-        emit ProcessAdded(namespace, process);
+        processToAppId[processId] = appId;
+
+        emit ProcessAdded(appId, processId);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                          GOVERNANCE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+
+
+    /*//////////////////////////////////////////////////////////////
+                            VIEW FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    function getApplication(string memory appId) external view returns (ApplicationRecord memory) {
+        return applications[appId];
+    }
+
+    function isProcessRegistered(string memory processId) external view returns (bool) {
+        string memory appId = processToAppId[processId];
+        return bytes(appId).length > 0;
     }
 }
