@@ -6,5 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [workspace]
-members = ["modules/comfyui_client/client", "modules/comfyui_provider/comfyui_provider", "modules/provider_dao_router/provider_dao_router"]
+members = [
+  "modules/comfyui_client/client", 
+  "modules/comfyui_provider/comfyui_provider", 
+  "modules/provider_dao_router/provider_dao_router",
+  "modules/ai_provider/worker",
+  "modules/ai_provider/broker",
+  "contracts"
+]
 

@@ -1,0 +1,307 @@
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
+use std::collections::{HashMap, HashSet};
+
+use kinode_process_lib::{get_typed_state, println, set_state, Address, ProcessId};
+
+use crate::chain::{ApplicationRecord, Broker, ProcessRecord, Worker};
+// --- State of the broker ---
+// ---------------------------
+type Timestamp = i64;
+pub type TaskId = String;
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct State {
+    pub task_queue: HashMap<TaskId, (Timestamp, Address, TaskParameters)>, // source, task_id, parameters
+    // make waiting_workers a unique set first in first out
+    pub waiting_workers: std::collections::VecDeque<Address>, // Queue of waiting workers
+    waiting_workers_set: HashSet<Address>, // Set to ensure uniqueness of the waiting workers
+    pub ongoing_tasks: HashMap<String, (Address, Task)>, // task_id -> source, parameters
+    pub on_chain_state: OnChainState,
+}
+
+impl State {
+    pub fn save(&self) -> anyhow::Result<()> {
+        set_state(&serde_json::to_vec(self)?);
+        Ok(())
+    }
+
+    pub fn load() -> Self {
+        match get_typed_state(|bytes| Ok(serde_json::from_slice::<State>(bytes)?)) {
+            Some(rs) => rs,
+            None => State::default(),
+        }
+    }
+
+    fn default() -> Self {
+        Self {
+            task_queue: HashMap::new(),
+            waiting_workers: std::collections::VecDeque::new(),
+            waiting_workers_set: HashSet::new(),
+            ongoing_tasks: HashMap::new(),
+            on_chain_state: OnChainState::default(),
+        }
+    }
+
+    pub fn set_chain_state(&mut self, state: OnChainState) {
+        self.on_chain_state = state;
+        self.save().unwrap();
+    }
+
+    pub fn add_task(&mut self, task_id: TaskId, source: Address, parameters: TaskParameters) {
+        // create timestamp
+        let timestamp = self.task_queue.len() as i64;
+        self.task_queue
+            .entry(task_id)
+            .or_insert((timestamp, source, parameters));
+        self.save().unwrap();
+    }
+
+    pub fn fetch_task(&mut self) -> Option<(String, Address, TaskParameters)> {
+        if let Some((task_id, _)) = self
+            .task_queue
+            .iter()
+            .next()
+            .map(|(task_id, _)| (task_id.clone(), ()))
+        {
+            if let Some((timestamp, source, parameters)) = self.task_queue.remove(&task_id) {
+                self.save().unwrap();
+                return Some((task_id, source, parameters));
+            }
+        }
+        None
+    }
+
+    pub fn remove_task(&mut self, task_id: &TaskId) {
+        self.task_queue.remove(task_id);
+        self.save().unwrap();
+    }
+
+    pub fn start_task(&mut self, task: Task, source: Address) {
+        self.ongoing_tasks
+            .insert(task.clone().task_id, (source, task.clone()));
+        self.save().unwrap();
+    }
+
+    // Adds a worker to the queue if it's not already present
+    pub fn add_waiting_worker(&mut self, worker: &Address) {
+        if !self.waiting_workers_set.contains(&worker) {
+            self.waiting_workers.push_back(worker.clone());
+            self.waiting_workers_set.insert(worker.clone());
+        }
+        self.save().unwrap();
+    }
+
+    // Removes the first worker from the queue and returns it, if any
+    pub fn remove_waiting_worker(&mut self) -> Option<Address> {
+        if let Some(worker) = self.waiting_workers.pop_front() {
+            self.waiting_workers_set.remove(&worker);
+            self.save().unwrap();
+            Some(worker)
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct OnChainState {
+    pub brokers: HashMap<String, Vec<Broker>>, // length 1 for now
+    pub workers: HashMap<String, Vec<Worker>>,
+    pub apps: HashMap<String, ApplicationRecord>,
+    pub processes: HashMap<String, ProcessRecord>,
+    pub queue_response_timeout_seconds: u8,
+    pub serve_timeout_seconds: u16, // TODO
+    pub max_outstanding_payments: u8,
+    pub payment_period_hours: u8,
+}
+
+impl OnChainState {
+    pub fn set_apps(&mut self, apps: Vec<ApplicationRecord>) {
+        self.apps = apps
+            .into_iter()
+            .map(|app| (app.clone().name, app))
+            .collect();
+    }
+    pub fn set_processes(&mut self, processes: Vec<ProcessRecord>) {
+        self.processes = processes
+            .into_iter()
+            .map(|process| (process.clone().name, process))
+            .collect();
+    }
+    pub fn set_brokers(&mut self, process_id: &String, brokers: Vec<Broker>) {
+        self.brokers.insert(process_id.to_string(), brokers);
+    }
+    pub fn set_workers(&mut self, process_id: &String, workers: Vec<Worker>) {
+        self.workers.insert(process_id.to_string(), workers);
+    }
+    fn default() -> Self {
+        Self {
+            brokers: HashMap::new(),
+            workers: HashMap::new(),
+            apps: HashMap::new(),
+            processes: HashMap::new(),
+            queue_response_timeout_seconds: 10,
+            serve_timeout_seconds: 10,
+            max_outstanding_payments: 10,
+            payment_period_hours: 1,
+        }
+    }
+}
+
+// --------------------------
+// ------ User Req/Res ------
+// --------------------------
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum UserRequests {
+    // broker:ai_provider:template.os { "RequestTask": { "process_id": "diffusion:memedeck:memedeck.os", "task_parameters": { "workflow": "basic" } } }
+    RequestTask {
+        process_id: String,
+        task_parameters: Value,
+    },
+    CancelTask {
+        process_id: ProcessId,
+        task_id: String,
+    },
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum UserResponses {
+    TaskRequested {
+        process_id: ProcessId,
+        task_id: String,
+    },
+    TaskClaimed {
+        process_id: ProcessId,
+        task_id: String,
+        worker_id: String,
+    },
+    TaskUpdated {
+        process_id: ProcessId,
+        task_id: String,
+        worker_id: String,
+        data: Value,
+    },
+    TaskCompleted {
+        process_id: ProcessId,
+        task_id: String,
+        worker_id: String,
+        result: Value,
+    },
+    TaskFailed {
+        process_id: ProcessId,
+        task_id: String,
+        error: String,
+    },
+    TaskCancelled {
+        process_id: ProcessId,
+        task_id: String,
+    },
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum UserErrors {
+    InvalidTaskParameters(String),
+}
+
+// --------------------------
+// ----- Worker Req/Res -----
+// --------------------------
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum WorkerRequests {
+    ClaimNextTask,
+    TaskStarted { process_id: String, task_id: String },
+    TaskComplete { process_id: String, task_id: String },
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum WorkerResponses {
+    WorkerList(Vec<String>),
+    Worker(String),
+    Tasks(Vec<Task>),
+    Task {
+        process_id: String,
+        task_id: String,
+    },
+    TaskAssigned {
+        worker_id: String,
+        process_id: String,
+        task: Task,
+    },
+    TaskList {
+        process_id: String,
+    },
+    AlreadyWaiting,
+}
+
+// ---- Other structs ----
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum TaskStatus {
+    #[serde(rename = "claimed")]
+    Claimed,
+    #[serde(rename = "pending")]
+    Pending,
+    #[serde(rename = "running")]
+    Running,
+    #[serde(rename = "completed")]
+    Completed,
+    #[serde(rename = "failed")]
+    Failed,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Task {
+    pub task_id: String,
+    pub status: TaskStatus,
+    pub parameters: TaskParameters,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TaskParameters {
+    pub process_id: ProcessId,  // diffusion.memedeck.os
+    pub task_id: String,        // uuid - unique id of the task
+    pub from_broker: String,    // the address of the broker
+    pub from_user: String,      // the id of the user who requested the task
+    pub task_parameters: Value, // parameters of the task, json
+}
+
+impl TaskParameters {
+    pub fn test_task_parameters() -> Self {
+        Self {
+            process_id: ProcessId {
+                process_name: "diffusion".to_string(),
+                package_name: "memedeck".to_string(),
+                publisher_node: "memedeck.os".to_string(),
+            },
+            task_id: "123".into(),
+            from_broker: "memedeck-broker-1.os".into(),
+            from_user: "memedeck-client-1.os".into(),
+            task_parameters: json!({
+                "nodes": {}
+            }),
+        }
+    }
+}
+// ----- Admin Req/Res ------
+// --------------------------
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum AdminRequest {
+    // broker:ai_provider:template.os {"SetWorkerProcess": { "process_id": "diffusion:memedeck:memedeck.os" } }
+    SetWorkerProcess { process_id: String },
+    // broker:ai_provider:template.os {"SetContractAddress": { "address": "0x5fbdb2315678afecb367f032d93f642f64180aa3" } }
+    SetContractAddress { address: String },
+    // broker:ai_provider:template.os {"SetIsReady": { "is_ready": true } }
+    SetIsReady { is_ready: bool },
+    // broker:ai_provider:template.os "GetState"
+    GetState,
+    // broker:ai_provider:template.os "SyncChainState"
+    SyncChainState,
+}
+
+pub fn string_to_process_id(s: &str) -> ProcessId {
+    let parts = s.split(':').collect::<Vec<&str>>();
+    ProcessId {
+        process_name: parts[0].to_string(),
+        package_name: parts[1].to_string(),
+        publisher_node: parts[2].to_string(),
+    }
+}

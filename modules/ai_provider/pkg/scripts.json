@@ -1,0 +1,30 @@
+{
+    "worker.wasm": {
+        "root": false,
+        "public": false,
+        "request_networking": true,
+        "request_capabilities": [
+            "worker:ai_provider:template.os",
+            "eth:distro:sys"
+        ],
+        "grant_capabilities": [
+            "worker:ai_provider:template.os",
+            "eth:distro:sys"
+        ]
+    },
+    "broker.wasm": {
+        "root": false,
+        "public": false,
+        "request_networking": true,
+        "request_capabilities": [
+            "broker:ai_provider:template.os",
+            "eth:distro:sys",
+            "vfs:distro:sys"
+        ],
+        "grant_capabilities": [
+            "broker:ai_provider:template.os",
+            "eth:distro:sys",
+            "vfs:distro:sys"
+        ]
+    }
+}

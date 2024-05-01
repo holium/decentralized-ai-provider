@@ -1,0 +1,9 @@
+#[allow(unused_imports)]
+[package]
+name = "contracts"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+alloy-sol-types = "0.7.1"
+alloy-primitives = { version = "0.7.1", features = ["serde"] }

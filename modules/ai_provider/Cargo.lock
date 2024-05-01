@@ -500,7 +500,7 @@ dependencies = [
  "anyhow",
  "bincode",
  "contracts",
- "kinode_process_lib 0.6.0",
+ "kinode_process_lib",
  "once_cell",
  "serde",
  "serde_json",
@@ -546,39 +546,6 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
-
-[[package]]
-name = "client"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives 0.6.4",
- "anyhow",
- "bincode",
- "kinode_process_lib 0.6.1",
- "serde",
- "serde_json",
- "thiserror",
- "wit-bindgen",
-]
-
-[[package]]
-name = "comfyui_provider"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives 0.6.4",
- "anyhow",
- "bincode",
- "kinode_process_lib 0.6.1",
- "rand",
- "rand_pcg",
- "serde",
- "serde_json",
- "serde_qs",
- "thiserror",
- "url",
- "uuid",
- "wit-bindgen",
-]
 
 [[package]]
 name = "const-hex"
@@ -649,10 +616,6 @@ dependencies = [
  "generic-array",
  "typenum",
 ]
-
-[[package]]
-name = "decentralized-ai-provider"
-version = "0.1.0"
 
 [[package]]
 name = "der"
@@ -772,9 +735,9 @@ dependencies = [
 
 [[package]]
 name = "fastrand"
-version = "2.0.2"
+version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "658bd65b1cf4c852a3cc96f18a8ce7b5640f6b703f905c7d74532294c2a63984"
+checksum = "9fc0510504f03c51ada170672ac806f1f105a88aa97a5281117e1ddc3368e51a"
 
 [[package]]
 name = "fastrlp"
@@ -908,9 +871,9 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.14.3"
+version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "290f1a1d9242c78d09ce40a5e87e7554ee637af1351968159f4952f028f75604"
+checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
 
 [[package]]
 name = "heck"
@@ -1088,28 +1051,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kinode_process_lib"
-version = "0.6.1"
-source = "git+https://github.com/kinode-dao/process_lib?tag=v0.6.1#37a20b0249dc2c86ae6c2c69cfb199fb177f1520"
-dependencies = [
- "alloy-json-rpc 0.1.0 (git+https://github.com/alloy-rs/alloy.git?rev=6f8ebb4)",
- "alloy-primitives 0.6.4",
- "alloy-rpc-types",
- "alloy-transport",
- "anyhow",
- "bincode",
- "http",
- "mime_guess",
- "rand",
- "rmp-serde",
- "serde",
- "serde_json",
- "thiserror",
- "url",
- "wit-bindgen",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1123,9 +1064,9 @@ checksum = "884e2677b40cc8c339eaefcb701c32ef1fd2493d71118dc0ca4b6a736c93bd67"
 
 [[package]]
 name = "libc"
-version = "0.2.153"
+version = "0.2.154"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c198f91728a82281a64e1f4f9eeb25d82cb32a5de251c6bd1b5154d63a8e7bd"
+checksum = "ae743338b92ff9146ce83992f766a31066a91a8c84a45e0e9f21e7cf6de6d346"
 
 [[package]]
 name = "libm"
@@ -1393,21 +1334,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "provider_dao_router"
-version = "0.1.0"
-dependencies = [
- "alloy-primitives 0.6.4",
- "anyhow",
- "bincode",
- "kinode_process_lib 0.6.1",
- "rand",
- "rand_pcg",
- "serde",
- "serde_json",
- "wit-bindgen",
-]
-
-[[package]]
 name = "quick-error"
 version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1459,16 +1385,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rand_pcg"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59cad018caf63deb318e5a4586d99a24424a364f40f1e5778c29aca23f4fc73e"
-dependencies = [
- "rand_core",
- "serde",
-]
-
-[[package]]
 name = "rand_xorshift"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1501,28 +1417,6 @@ checksum = "bb919243f34364b6bd2fc10ef797edbfa75f33c252e7998527479c6d6b47e1ec"
 dependencies = [
  "bytes",
  "rustc-hex",
-]
-
-[[package]]
-name = "rmp"
-version = "0.8.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "228ed7c16fa39782c3b3468e974aec2795e9089153cd08ee2e9aefb3613334c4"
-dependencies = [
- "byteorder",
- "num-traits",
- "paste",
-]
-
-[[package]]
-name = "rmp-serde"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "938a142ab806f18b88a97b0dea523d39e0fd730a064b035726adcfc58a8a5188"
-dependencies = [
- "byteorder",
- "rmp",
- "serde",
 ]
 
 [[package]]
@@ -1656,18 +1550,18 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.198"
+version = "1.0.199"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9846a40c979031340571da2545a4e5b7c4163bdae79b301d5f86d03979451fcc"
+checksum = "0c9f6e76df036c77cd94996771fb40db98187f096dd0b9af39c6c6e452ba966a"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.198"
+version = "1.0.199"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e88edab869b01783ba905e7d0153f9fc1a6505a96e4ad3018011eedb838566d9"
+checksum = "11bd257a6541e141e42ca6d24ae26f7714887b47e89aa739099104c7e4d3b7fc"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1683,17 +1577,6 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
-]
-
-[[package]]
-name = "serde_qs"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd34f36fe4c5ba9654417139a9b3a20d2e1de6012ee678ad14d240c22c78d8d6"
-dependencies = [
- "percent-encoding",
- "serde",
- "thiserror",
 ]
 
 [[package]]
@@ -2364,7 +2247,7 @@ dependencies = [
  "alloy-sol-types",
  "anyhow",
  "bincode",
- "kinode_process_lib 0.6.0",
+ "kinode_process_lib",
  "serde",
  "serde_json",
  "wit-bindgen",

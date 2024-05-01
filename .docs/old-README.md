@@ -1,3 +1,5 @@
+
+
 # Decentralized AI Provider
 
 ```ascii
@@ -30,6 +32,7 @@
 └────────────────────────────────────────────────────────────────────┘
 ```
 
+
 ## Project setup
 
 ```bash
@@ -42,37 +45,22 @@ cargo install --git https://github.com/kinode-dao/kit
 
 ```
 
-### 1. Run an anvil node
+
+## Start the provider & router
+
 ```bash
-anvil
-# if you want a sepolia fork
-# anvil --fork-url https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa44561617 --port 8545
+# boot a fakenode for the router, provider and client
+kit boot-fake-node -p 8082 --network-router-port 8092 --persist -f memedeck-broker-1.os -h /tmp/memedeck-client --rpc ws://127.0.0.1:8545
 ```
 
-### 2. Deploy the contracts
-The deploy script below will deploy the smart contracts with fake data needed for dev with the fakenode broker and worker.
-
+## Start the client
 ```bash
-forge script script/Deploy.s.sol --broadcast --rpc-url http://localhost:8545
-```
+# start the client
+kit bs comfyui_client -p 8082 
 
+admin:comfyui_client:nick1udwig.os {"SetRouterProcess": {"process_id": "provider_dao_router:provider_dao_router:nick1udwig.os"}}
+admin:comfyui_client:nick1udwig.os {"SetRollupSequencer": {"address": "memedeck-router.os@sequencer:provider-dao-rollup:nick1udwig.os"}}
 
-### 3. Start the broker & workers
+m our@client:comfyui_client:nick1udwig.os '{"RunJob": {"workflow": "workflow", "parameters": "{\"quality\": \"fast\", \"aspect_ratio\": \"square\", \"workflow\": \"workflow\", \"user_id\": \"0\", \"negative_prompt\": \"\", \"positive_prompt\": \"going for a walk in the park and looking at beautiful flowers and butterflies\", \"cfg_scale\": {\"min\": 1.0, \"max\": 1.0}, \"character\": {\"id\": \"pepe\"}, \"styler\": {\"id\": \"hand-drawn\"}}"}}'
 
-```bash
-# a fakenode broker 
-kit boot-fake-node -p 8082 --network-router-port 8092 -f memedeck-broker-1.os -h /tmp/memedeck-broker-1 --rpc ws://127.0.0.1:8545
-
-# a fakenode worker
-kit boot-fake-node -p 8083 --network-router-port 8092 -f memedeck-worker-1.os -h /tmp/memedeck-worker-1 --rpc ws://127.0.0.1:8545
-
-# a fakenode client (TODO)
-```
-
-### 4. Init actions
-
-```bash
-# in the kinode terminal for memedeck-broker-1.os
-
-# in the kinode terminal for memedeck-worker-1.os
 ```
