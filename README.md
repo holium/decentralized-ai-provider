@@ -53,6 +53,9 @@ anvil
 The deploy script below will deploy the smart contracts with fake data needed for dev with the fakenode broker and worker.
 
 ```bash
+cd contracts
+forge build
+# deploy
 forge script script/Deploy.s.sol --broadcast --rpc-url http://localhost:8545
 ```
 

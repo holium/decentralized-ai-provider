@@ -45,7 +45,13 @@ fn handle_message(our: &Address, state: &mut State) -> anyhow::Result<(), anyhow
 
 call_init!(init);
 fn init(our: Address) {
-    let mut state: State = State::load();
+    let mut state: State = match State::load() {
+        Ok(s) => s,
+        Err(e) => {
+            println!("error loading state: {:?}", e);
+            State::default()
+        }
+    };
 
     loop {
         if let Err(e) = handle_message(&our, &mut state) {

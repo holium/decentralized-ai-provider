@@ -41,11 +41,6 @@ pub fn handle_admin_request(
 
             state.on_chain_state = chain_state;
             state.save().unwrap();
-
-            println!(
-                "{}",
-                serde_json::to_string_pretty(&state.on_chain_state).unwrap()
-            );
         }
         Ok(AdminRequest::SetIsReady { is_ready }) => {
             println!("---> SetIsReady {{ is_ready : {:?} }}", is_ready);

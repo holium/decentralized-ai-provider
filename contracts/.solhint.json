@@ -1,32 +1,32 @@
 {
-  "extends": "solhint:recommended",
-  "rules": {
-    "code-complexity": [
-      "error",
-      8
-    ],
-    "compiler-version": [
-      "error",
-      ">=0.8.21"
-    ],
-    "func-name-mixedcase": "off",
-    "func-visibility": [
-      "error",
-      {
-        "ignoreConstructors": true
-      }
-    ],
-    "max-line-length": "off",
-    "named-parameters-mapping": "warn",
-    "no-console": "off",
-    "not-rely-on-time": "off",
-    "one-contract-per-file": "off",
-    "no-global-import": "off",
-    "reason-string": "off",
-    "ignore-files": [
-      "node_modules/**",
-      "test/**",
-      ".docs/**"
-    ]
-  }
+    "extends": "solhint:recommended",
+    "rules": {
+        "code-complexity": [
+            "error",
+            8
+        ],
+        "compiler-version": [
+            "error",
+            "^0.8.25"
+        ],
+        "func-name-mixedcase": "off",
+        "func-visibility": [
+            "error",
+            {
+                "ignoreConstructors": true
+            }
+        ],
+        "max-line-length": "off",
+        "named-parameters-mapping": "warn",
+        "no-console": "off",
+        "not-rely-on-time": "off",
+        "one-contract-per-file": "off",
+        "no-global-import": "off",
+        "reason-string": "off",
+        "ignore-files": [
+            "node_modules/**",
+            "test/**",
+            ".docs/**"
+        ]
+    }
 }

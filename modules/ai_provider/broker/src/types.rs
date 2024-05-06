@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
@@ -21,19 +22,52 @@ pub struct State {
 }
 
 impl State {
-    pub fn save(&self) -> anyhow::Result<()> {
-        set_state(&serde_json::to_vec(self)?);
+    pub fn save(&self) -> Result<()> {
+        // Attempt to serialize the current state to a JSON vector
+        let serialized = match serde_json::to_vec(self).context("Failed to serialize state to JSON")
+        {
+            Ok(serialized) => serialized,
+            Err(e) => {
+                println!("Error serializing state: {:?}", e);
+                return Err(anyhow::Error::from(e));
+            }
+        };
+
+        // Attempt to set the state, handling potential errors
+        set_state(&serialized);
         Ok(())
     }
-
-    pub fn load() -> Self {
-        match get_typed_state(|bytes| Ok(serde_json::from_slice::<State>(bytes)?)) {
-            Some(rs) => rs,
-            None => State::default(),
+    pub fn load() -> Result<Self> {
+        // Attempt to get the typed state and handle the outcome
+        match get_typed_state(|bytes| {
+            // Deserialize bytes and handle deserialization errors
+            bincode::deserialize::<State>(bytes)
+                .map_err(|e| anyhow::Error::from(e))
+                .context("Failed to deserialize state from bytes")
+        }) {
+            // Successfully retrieved and deserialized state
+            Some(result) => Ok(result),
+            // No state was found; default to a new state, but differentiate if this should be an error
+            None => {
+                // Depending on the application logic, consider if this should return an error
+                eprintln!("No state found; using default state.");
+                Ok(State::default())
+            }
         }
     }
+    // pub fn save(&self) -> anyhow::Result<()> {
+    //     set_state(&serde_json::to_vec(self)?);
+    //     Ok(())
+    // }
 
-    fn default() -> Self {
+    // pub fn load() -> anyhow::Result<Self> {
+    //     match get_typed_state(|bytes| Ok(bincode::deserialize::<State>(bytes)?)) {
+    //         Some(s) => Ok(s),
+    //         None => Ok(State::default()),
+    //     }
+    // }
+
+    pub fn default() -> Self {
         Self {
             task_queue: HashMap::new(),
             waiting_workers: std::collections::VecDeque::new(),

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity >=0.8.25;
+pragma solidity ^0.8.25;
 
 import { AppRegistry } from "../src/AppRegistry.sol"; // Adjust this path as necessary
 import "../src/interfaces/IAppRegistry.sol";
