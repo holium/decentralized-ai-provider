@@ -2,10 +2,9 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
-
 use kinode_process_lib::{get_typed_state, println, set_state, Address, ProcessId};
-
 use crate::chain::{ApplicationRecord, Broker, ProcessRecord, Worker};
+
 // --- State of the broker ---
 // ---------------------------
 type Timestamp = i64;
@@ -55,18 +54,6 @@ impl State {
             }
         }
     }
-    // pub fn save(&self) -> anyhow::Result<()> {
-    //     set_state(&serde_json::to_vec(self)?);
-    //     Ok(())
-    // }
-
-    // pub fn load() -> anyhow::Result<Self> {
-    //     match get_typed_state(|bytes| Ok(bincode::deserialize::<State>(bytes)?)) {
-    //         Some(s) => Ok(s),
-    //         None => Ok(State::default()),
-    //     }
-    // }
-
     pub fn default() -> Self {
         Self {
             task_queue: HashMap::new(),
@@ -98,7 +85,7 @@ impl State {
             .next()
             .map(|(task_id, _)| (task_id.clone(), ()))
         {
-            if let Some((timestamp, source, parameters)) = self.task_queue.remove(&task_id) {
+            if let Some((_timestamp, source, parameters)) = self.task_queue.remove(&task_id) {
                 self.save().unwrap();
                 return Some((task_id, source, parameters));
             }
@@ -157,18 +144,22 @@ impl OnChainState {
             .map(|app| (app.clone().name, app))
             .collect();
     }
+
     pub fn set_processes(&mut self, processes: Vec<ProcessRecord>) {
         self.processes = processes
             .into_iter()
             .map(|process| (process.clone().name, process))
             .collect();
     }
+
     pub fn set_brokers(&mut self, process_id: &String, brokers: Vec<Broker>) {
         self.brokers.insert(process_id.to_string(), brokers);
     }
+
     pub fn set_workers(&mut self, process_id: &String, workers: Vec<Worker>) {
         self.workers.insert(process_id.to_string(), workers);
     }
+
     fn default() -> Self {
         Self {
             brokers: HashMap::new(),
@@ -188,7 +179,7 @@ impl OnChainState {
 // --------------------------
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum UserRequests {
-    // broker:ai_provider:template.os { "RequestTask": { "process_id": "diffusion:memedeck:memedeck.os", "task_parameters": { "workflow": "basic" } } }
+    // broker:ai_provider:meme-deck.os { "RequestTask": { "process_id": "diffusion:memedeck:memedeck.os", "task_parameters": { "workflow": "basic" } } }
     RequestTask {
         process_id: String,
         task_parameters: Value,
@@ -232,6 +223,7 @@ pub enum UserResponses {
         task_id: String,
     },
 }
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum UserErrors {
     InvalidTaskParameters(String),
@@ -315,20 +307,23 @@ impl TaskParameters {
         }
     }
 }
+
 // ----- Admin Req/Res ------
 // --------------------------
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum AdminRequest {
-    // broker:ai_provider:template.os {"SetWorkerProcess": { "process_id": "diffusion:memedeck:memedeck.os" } }
+    // broker:ai_provider:meme-deck.os {"SetWorkerProcess": { "process_id": "diffusion:memedeck:memedeck.os" } }
     SetWorkerProcess { process_id: String },
-    // broker:ai_provider:template.os {"SetContractAddress": { "address": "0x5fbdb2315678afecb367f032d93f642f64180aa3" } }
+    // broker:ai_provider:meme-deck.os {"SetContractAddress": { "address": "0x5fbdb2315678afecb367f032d93f642f64180aa3" } }
     SetContractAddress { address: String },
-    // broker:ai_provider:template.os {"SetIsReady": { "is_ready": true } }
+    // broker:ai_provider:meme-deck.os {"SetIsReady": { "is_ready": true } }
     SetIsReady { is_ready: bool },
-    // broker:ai_provider:template.os "GetState"
+    // broker:ai_provider:meme-deck.os "GetState"
     GetState,
-    // broker:ai_provider:template.os "SyncChainState"
+    // broker:ai_provider:meme-deck.os "SyncChainState"
     SyncChainState,
+    // m our@broker:ai_provider:meme-deck.os {"RegisterBroker": {"process_id": "diffusion:memedeck:memedeck.os" }}
+    RegisterBroker { process_id: String },
 }
 
 pub fn string_to_process_id(s: &str) -> ProcessId {
@@ -339,3 +334,4 @@ pub fn string_to_process_id(s: &str) -> ProcessId {
         publisher_node: parts[2].to_string(),
     }
 }
+

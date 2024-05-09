@@ -1,10 +1,10 @@
 use std::collections::HashMap;
-
 use crate::chain;
 use crate::types::{AdminRequest, OnChainState, State};
-use kinode_process_lib::{println, Message};
+use kinode_process_lib::{println, Message, Address};
 
 pub fn handle_admin_request(
+    our: &Address,
     message: &Message,
     state: &mut State,
 ) -> anyhow::Result<(), anyhow::Error> {
@@ -15,7 +15,9 @@ pub fn handle_admin_request(
             let apps = chain::get_applications();
             let processes = chain::get_processes();
             let brokers = chain::get_brokers(&current_process);
+            println!("got {} brokers", brokers.len());
             let workers = chain::get_workers(&current_process);
+            println!("got {} workers", workers.len());
             let mut chain_state = OnChainState {
                 apps: apps
                     .into_iter()
@@ -53,6 +55,10 @@ pub fn handle_admin_request(
         }
         Ok(AdminRequest::GetState) => {
             println!("{}", serde_json::to_string_pretty(&state).unwrap());
+        }
+        Ok(AdminRequest::RegisterBroker { process_id }) => {
+            let _ = chain::register_broker(&our.to_string(), process_id.clone());
+            println!("registered as broker for {process_id}");
         }
         _ => return Err(anyhow::anyhow!("Unknown admin request")),
     }

@@ -52,22 +52,29 @@ pub fn handle_broker_request(
                 println!("---> Starting the task {:?}", task);
                 state.active_task = Some(task.clone());
 
+                println!("we set state.active_task");
+                //TODO: this request is "missing fields" whatever that means
                 Request::new()
+                    .target(message.source())
                     .body(serde_json::to_vec(&WorkerRequests::TaskStarted {
                         process_id: process_id.to_string(),
                         task_id: task.clone().task_id,
                     })?)
                     .send()?;
+                println!("we send a request");
 
                 // wait for 5 seconds
                 std::thread::sleep(std::time::Duration::from_secs(5));
+                println!("we waited");
 
                 Request::new()
+                    .target(message.source())
                     .body(serde_json::to_vec(&WorkerRequests::TaskComplete {
                         process_id: process_id.to_string(),
                         task_id: task.clone().task_id,
                     })?)
                     .send()?;
+                println!("we sent another request");
             }
 
             Ok(())

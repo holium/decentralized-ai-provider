@@ -1,14 +1,12 @@
-use admin::handle_admin_request;
-use kinode_process_lib::{await_message, call_init, println, Address};
-
-use types::State;
-
 mod admin;
 mod chain;
 pub mod types;
 mod user;
 mod worker;
 
+use admin::handle_admin_request;
+use kinode_process_lib::{await_message, call_init, println, Address};
+use types::State;
 use user::handle_user_request;
 use worker::handle_worker_request;
 
@@ -28,7 +26,7 @@ fn handle_message(our: &Address, state: &mut State) -> anyhow::Result<(), anyhow
 
     if message.is_request() {
         if message.source().node == our.node {
-            if handle_admin_request(&message, state).is_ok() {
+            if handle_admin_request(&our, &message, state).is_ok() {
                 return Ok(());
             }
         }
@@ -45,6 +43,7 @@ fn handle_message(our: &Address, state: &mut State) -> anyhow::Result<(), anyhow
 
 call_init!(init);
 fn init(our: Address) {
+    println!("starting ai_provider:broker");
     let mut state: State = match State::load() {
         Ok(s) => s,
         Err(e) => {

@@ -6,10 +6,9 @@ use kinode_process_lib::{
 };
 use serde::{Deserialize, Serialize};
 
-// 0x5fbdb2315678afecb367f032d93f642f64180aa3
+// 0xa51c1fc2f0d1a1b8494ed1fe312d7c3a78ed91c0
 static CONTRACT_ADDRESS: EthAddress = EthAddress::new([
-    0x5f, 0xbd, 0xb2, 0x31, 0x56, 0x78, 0xaf, 0xec, 0xb3, 0x67, 0xf0, 0x32, 0xd9, 0x3f, 0x64, 0x2f,
-    0x64, 0x18, 0x0a, 0xa3,
+    0xa5,0x1c, 0x1f, 0xc2, 0xf0, 0xd1, 0xa1, 0xb8, 0x49, 0x4e, 0xd1, 0xfe, 0x31, 0x2d, 0x7c, 0x3a, 0x78, 0xed, 0x91, 0xc0, 
 ]);
 
 sol! {
@@ -42,7 +41,40 @@ sol! {
     function getProcesses() external view returns (ProcessRecord[] memory) {}
     function getProcessBrokers(string memory processId) external view returns (Broker[] memory) {}
     function getProcessWorkers(string memory processId) external view returns (Worker[] memory) {}
+    function registerBroker(string calldata processId, string calldata brokerKnsId) external;
 }
+
+pub fn register_broker(our: &str, process_id: String) -> Result<(),()> {
+    let provider = Provider::new(31337, 5);
+
+    let input = registerBrokerCall {
+        processId: process_id,//: String::from("diffusion:memedeck:memedeck.os"),
+        brokerKnsId: our.into(),//"memedeck:memedeck.os".into(),
+    };
+    let tx_input = TransactionInput {
+        data: Some(input.abi_encode().into()),
+        ..Default::default()
+    };
+
+    let tx_req = TransactionRequest {
+        chain_id: Some(U64::from(31337)),
+        to: Some(CONTRACT_ADDRESS),
+        input: tx_input,
+        ..Default::default()
+    };
+
+    match provider.call(tx_req, None) {
+        Ok(r) => {
+            println!("registerBroker response {:?}", r);
+            Ok(())
+        },
+        Err(e) => {
+            println!("error: {:?}", e);
+            Err(())
+        }
+    }
+}
+
 
 /// Get the list of applications from the AppRegistry contract.
 pub fn get_applications() -> Vec<ApplicationRecord> {

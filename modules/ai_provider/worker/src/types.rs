@@ -1,7 +1,6 @@
 use kinode_process_lib::{get_typed_state, set_state, ProcessId};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-
 use crate::chain::Broker;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -29,7 +28,7 @@ impl WorkerState {
         Self {
             is_ready: false,
             brokers: vec![],
-            contract_address: "0x5fbdb2315678afecb367f032d93f642f64180aa3".to_string(),
+            contract_address: "0xa51c1fc2f0d1a1b8494ed1fe312d7c3a78ed91c0".to_string(),
             active_process_id: Some(ProcessId {
                 process_name: "diffusion".to_string(),
                 package_name: "memedeck".to_string(),
@@ -103,10 +102,11 @@ pub enum UserResponses {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum AdminRequest {
-    // worker:ai_provider:template.os {"SetWorkerProcess": { "process_id": "diffusion:memedeck:meme-deck.os" } }
+    // worker:ai_provider:meme-deck.os {"SetWorkerProcess": { "process_id": "diffusion:memedeck:meme-deck.os" } }
     SetWorkerProcess { process_id: String },
-    // worker:ai_provider:template.os {"SetContractAddress": { "address": "0x5fbdb2315678afecb367f032d93f642f64180aa3" } }
+    // worker:ai_provider:meme-deck.os {"SetContractAddress": { "address": "0xa51c1fc2f0d1a1b8494ed1fe312d7c3a78ed91c0" } }
     SetContractAddress { address: String },
-    // worker:ai_provider:template.os {"SetIsReady": { "is_ready": true } }
+    // worker:ai_provider:meme-deck.os {"SetIsReady": { "is_ready": true } }
     SetIsReady { is_ready: bool },
+    GetState,
 }

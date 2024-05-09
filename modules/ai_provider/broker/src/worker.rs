@@ -1,5 +1,4 @@
 use kinode_process_lib::{println, Address, Message, ProcessId, Request};
-
 use crate::types::{
     State, Task, TaskId, TaskParameters, TaskStatus, WorkerRequests, WorkerResponses,
 };
@@ -84,6 +83,7 @@ pub fn handle_worker_request(
 
 pub fn assign_tasks_to_waiting_workers(state: &mut State) -> anyhow::Result<()> {
     if state.task_queue.is_empty() || state.waiting_workers.is_empty() {
+        println!("warning: tried to assign_tasks_to_waiting_workers but queue is empty or there are no waiting workers");
         return Ok(());
     }
 
@@ -116,7 +116,7 @@ pub fn send_task_to_worker(
         process: ProcessId {
             process_name: "worker".into(),
             package_name: "ai_provider".into(),
-            publisher_node: "template.os".into(),
+            publisher_node: "meme-deck.os".into(),
         },
     };
     Request::to(&worker_address)

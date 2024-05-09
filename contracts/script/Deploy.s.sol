@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.25;
+pragma solidity >=0.8.21 <0.9.0;
 
 import { AppRegistry } from "../src/AppRegistry.sol"; // Adjust this path as necessary
 import "../src/interfaces/IAppRegistry.sol";
@@ -44,13 +44,13 @@ contract Deploy is BaseScript {
 
         // Register a sample broker
         // address broker = address(3);
-        string memory brokerId = "memedeck-broker-1.os";
+        string memory brokerId = "memedeck-broker-1.dev";
         appRegistry.registerBroker(processId, brokerId);
         console2.log("Broker registered under process:", brokerId, processId);
 
         // Register a sample worker
         // address worker = address(4);
-        string memory workerId = "memedeck-worker-1.os";
+        string memory workerId = "memedeck-worker-1.dev";
         appRegistry.registerWorker(processId, workerId);
         console2.log("Worker registered under process:", workerId, processId);
     }

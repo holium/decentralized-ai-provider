@@ -6,6 +6,10 @@ pub fn handle_admin_request(
     state: &mut WorkerState,
 ) -> anyhow::Result<(), anyhow::Error> {
     match serde_json::from_slice::<AdminRequest>(message.body()) {
+        Ok(AdminRequest::GetState) => {
+            println!("{}", serde_json::to_string_pretty(&state).unwrap());
+            Ok(())
+        },
         Ok(AdminRequest::SetIsReady { is_ready }) => {
             println!("---> SetIsReady {{ is_ready : {:?} }}", is_ready);
             if state.brokers.is_empty() && state.active_process_id.is_some() {
@@ -22,7 +26,7 @@ pub fn handle_admin_request(
                 ProcessId {
                     process_name: "broker".into(),
                     package_name: "ai_provider".into(),
-                    publisher_node: "template.os".into(),
+                    publisher_node: "meme-deck.os".into(),
                 },
             );
             match Request::to(address)
