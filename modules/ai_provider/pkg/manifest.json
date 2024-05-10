@@ -1,5 +1,22 @@
 [
     {
+        "process_name": "diffusion",
+        "process_wasm_path": "/diffusion.wasm",
+        "on_exit": "Restart",
+        "request_networking": true,
+        "request_capabilities": [
+            "vfs:distro:sys",
+            "http_server:distro:sys",
+            "net:distro:sys"
+        ],
+        "grant_capabilities": [
+            "http_server:distro:sys",
+            "net:distro:sys",
+            "terminal:terminal:sys"
+        ],
+        "public": true
+    },
+    {
         "process_name": "worker",
         "process_wasm_path": "/worker.wasm",
         "on_exit": "Restart",

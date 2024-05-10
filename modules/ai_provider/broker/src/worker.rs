@@ -1,7 +1,6 @@
 use kinode_process_lib::{println, Address, Message, ProcessId, Request};
-use crate::types::{
-    State, Task, TaskId, TaskParameters, TaskStatus, WorkerRequests, WorkerResponses,
-};
+use crate::types::{State, WorkerResponses,};
+use shared::{Task, TaskId, TaskParameters, TaskStatus, WorkerToBrokerRequests};
 
 pub fn handle_worker_request(
     _our: &Address,
@@ -9,8 +8,8 @@ pub fn handle_worker_request(
     state: &mut State,
 ) -> anyhow::Result<()> {
     let source = message.source();
-    match serde_json::from_slice::<WorkerRequests>(message.body())? {
-        WorkerRequests::ClaimNextTask => {
+    match serde_json::from_slice::<WorkerToBrokerRequests>(message.body())? {
+        WorkerToBrokerRequests::ClaimNextTask => {
             println!("---> ClaimNextTask: {:?}", message.source().node());
             println!("---> waiting_workers: {:?}", state.waiting_workers.len());
             println!("---> task_queue: {:?}", state.task_queue.len());
@@ -66,14 +65,14 @@ pub fn handle_worker_request(
                 }
             }
         }
-        WorkerRequests::TaskStarted { task_id, .. } => {
+        WorkerToBrokerRequests::TaskStarted { task_id, .. } => {
             println!("---> TaskStarted: {:?}", task_id);
             // update task status to running
             if let Some((_, task)) = state.ongoing_tasks.get_mut(&task_id) {
                 task.status = TaskStatus::Running;
             }
         }
-        WorkerRequests::TaskComplete { task_id, .. } => {
+        WorkerToBrokerRequests::TaskComplete { task_id, .. } => {
             println!("---> TaskComplete: {:?}", task_id);
             state.ongoing_tasks.remove(&task_id);
         }

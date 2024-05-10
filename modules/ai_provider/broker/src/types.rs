@@ -1,14 +1,14 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use kinode_process_lib::{get_typed_state, println, set_state, Address, ProcessId};
 use crate::chain::{ApplicationRecord, Broker, ProcessRecord, Worker};
+use shared::{TaskId, TaskParameters, Task};
 
 // --- State of the broker ---
 // ---------------------------
 type Timestamp = i64;
-pub type TaskId = String;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct State {
@@ -233,13 +233,6 @@ pub enum UserErrors {
 // ----- Worker Req/Res -----
 // --------------------------
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum WorkerRequests {
-    ClaimNextTask,
-    TaskStarted { process_id: String, task_id: String },
-    TaskComplete { process_id: String, task_id: String },
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum WorkerResponses {
     WorkerList(Vec<String>),
     Worker(String),
@@ -257,55 +250,6 @@ pub enum WorkerResponses {
         process_id: String,
     },
     AlreadyWaiting,
-}
-
-// ---- Other structs ----
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum TaskStatus {
-    #[serde(rename = "claimed")]
-    Claimed,
-    #[serde(rename = "pending")]
-    Pending,
-    #[serde(rename = "running")]
-    Running,
-    #[serde(rename = "completed")]
-    Completed,
-    #[serde(rename = "failed")]
-    Failed,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Task {
-    pub task_id: String,
-    pub status: TaskStatus,
-    pub parameters: TaskParameters,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct TaskParameters {
-    pub process_id: ProcessId,  // diffusion.memedeck.os
-    pub task_id: String,        // uuid - unique id of the task
-    pub from_broker: String,    // the address of the broker
-    pub from_user: String,      // the id of the user who requested the task
-    pub task_parameters: Value, // parameters of the task, json
-}
-
-impl TaskParameters {
-    pub fn test_task_parameters() -> Self {
-        Self {
-            process_id: ProcessId {
-                process_name: "diffusion".to_string(),
-                package_name: "memedeck".to_string(),
-                publisher_node: "memedeck.os".to_string(),
-            },
-            task_id: "123".into(),
-            from_broker: "memedeck-broker-1.os".into(),
-            from_user: "memedeck-client-1.os".into(),
-            task_parameters: json!({
-                "nodes": {}
-            }),
-        }
-    }
 }
 
 // ----- Admin Req/Res ------

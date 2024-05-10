@@ -1,8 +1,7 @@
-use crate::types::{string_to_process_id, State, TaskParameters, UserRequests, UserResponses};
-
+use crate::types::{string_to_process_id, State, UserRequests, UserResponses};
 use super::worker::assign_tasks_to_waiting_workers;
 use kinode_process_lib::{println, Address, Message};
-
+use shared::TaskParameters;
 use uuid::Uuid;
 
 pub fn handle_user_request(

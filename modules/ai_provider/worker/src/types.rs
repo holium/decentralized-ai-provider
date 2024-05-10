@@ -1,7 +1,7 @@
 use kinode_process_lib::{get_typed_state, set_state, ProcessId};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use crate::chain::Broker;
+use shared::{TaskParameters, Task};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct WorkerState {
@@ -40,34 +40,6 @@ impl WorkerState {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum TaskStatus {
-    #[serde(rename = "claimed")]
-    Claimed,
-    #[serde(rename = "running")]
-    Running,
-    #[serde(rename = "completed")]
-    Completed,
-    #[serde(rename = "failed")]
-    Failed,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct TaskParameters {
-    pub process_id: String,     // diffusion.memedeck.os
-    pub task_id: String,        // uuid - unique id of the task
-    pub from_broker: String,    // the address of the broker
-    pub from_user: String,      // the id of the user who requested the task
-    pub task_parameters: Value, // parameters of the task, json
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Task {
-    pub task_id: String,
-    pub status: TaskStatus,
-    pub parameters: TaskParameters,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum BrokerRequests {
     NewTask(TaskParameters),
     TaskAssigned {
@@ -75,13 +47,6 @@ pub enum BrokerRequests {
         process_id: String,
         task: Task,
     },
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum WorkerRequests {
-    ClaimNextTask,
-    TaskStarted { process_id: String, task_id: String },
-    TaskComplete { process_id: String, task_id: String },
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

@@ -3,6 +3,8 @@ resolver = "2"
 members = [
     "worker",
     "broker",
+    "diffusion",
+    "crate/shared"
 ]
 
 [profile.release]

@@ -1,5 +1,6 @@
-use crate::types::{BrokerRequests, BrokerResponses, WorkerRequests, WorkerState};
-
+use crate::types::{BrokerRequests, BrokerResponses, WorkerState};
+use shared::WorkerToProcessRequests;
+use shared::WorkerToBrokerRequests;
 use anyhow::Error;
 use kinode_process_lib::{println, Address, Message, Request};
 
@@ -52,24 +53,25 @@ pub fn handle_broker_request(
                 println!("---> Starting the task {:?}", task);
                 state.active_task = Some(task.clone());
 
-                println!("we set state.active_task");
-                //TODO: this request is "missing fields" whatever that means
                 Request::new()
                     .target(message.source())
-                    .body(serde_json::to_vec(&WorkerRequests::TaskStarted {
+                    .body(serde_json::to_vec(&WorkerToBrokerRequests::TaskStarted {
                         process_id: process_id.to_string(),
                         task_id: task.clone().task_id,
                     })?)
                     .send()?;
-                println!("we send a request");
+                println!("we told the broker that we started the task");
 
-                // wait for 5 seconds
-                std::thread::sleep(std::time::Duration::from_secs(5));
-                println!("we waited");
+                // TODO: tell the "active_process" running on our own node, to do the task that we
+                // just recieved from the broker
+                Request::new()
+                    .target((our.node(), state.active_process_id.clone().unwrap()))
+                    .body(serde_json::to_vec(&WorkerToProcessRequests::StartTask(task.parameters.task_parameters.clone()))?)
+                    .send()?;
 
                 Request::new()
                     .target(message.source())
-                    .body(serde_json::to_vec(&WorkerRequests::TaskComplete {
+                    .body(serde_json::to_vec(&WorkerToBrokerRequests::TaskComplete {
                         process_id: process_id.to_string(),
                         task_id: task.clone().task_id,
                     })?)

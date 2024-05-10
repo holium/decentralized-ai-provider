@@ -1,6 +1,8 @@
 use crate::chain;
-use crate::types::{AdminRequest, WorkerRequests, WorkerState};
+use crate::types::{AdminRequest, WorkerState};
 use kinode_process_lib::{println, Address, Message, ProcessId, Request};
+use shared::WorkerToBrokerRequests;
+
 pub fn handle_admin_request(
     message: &Message,
     state: &mut WorkerState,
@@ -30,7 +32,7 @@ pub fn handle_admin_request(
                 },
             );
             match Request::to(address)
-                .body(serde_json::to_vec(&WorkerRequests::ClaimNextTask)?)
+                .body(serde_json::to_vec(&WorkerToBrokerRequests::ClaimNextTask)?)
                 .send()
             {
                 Ok(_) => state.save(),
