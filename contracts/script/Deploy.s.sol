@@ -38,7 +38,7 @@ contract Deploy is BaseScript {
         console2.log("Application registered:", appId, appName);
 
         // Register a sample process under the registered application
-        string memory processId = "diffusion:memedeck:memedeck.os";
+        string memory processId = "diffusion:ai_provider:meme-deck.os";
         appRegistry.registerProcess(appId, processId, "diffusion", "https://github.com/holium/memedeck-node");
         console2.log("Process registered under application:", processId, appId);
 

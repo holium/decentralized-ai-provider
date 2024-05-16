@@ -11,7 +11,7 @@ pub fn handle_admin_request(
     match serde_json::from_slice::<AdminRequest>(message.body()) {
         Ok(AdminRequest::SyncChainState) => {
             println!("---> SyncChainState");
-            let current_process: String = "diffusion:memedeck:memedeck.os".into();
+            let current_process: String = "diffusion:ai_provider:meme-deck.os".into();
             let apps = chain::get_applications();
             let processes = chain::get_processes();
             let brokers = chain::get_brokers(&current_process);

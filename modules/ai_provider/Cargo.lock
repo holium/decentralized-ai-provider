@@ -231,7 +231,7 @@ version = "0.1.0"
 source = "git+https://github.com/alloy-rs/alloy.git?rev=6f8ebb4#6f8ebb45afca1a201a11d421ec46db0f7a1d8d08"
 dependencies = [
  "alloy-json-rpc 0.1.0 (git+https://github.com/alloy-rs/alloy.git?rev=6f8ebb4)",
- "base64",
+ "base64 0.21.7",
  "futures-util",
  "serde",
  "serde_json",
@@ -426,6 +426,12 @@ name = "base16ct"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c7f02d4ea65f2c1853089ffd8d2787bdbc63de2f0d29dedbcf8ccdfa0ccd4cf"
+
+[[package]]
+name = "base64"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 
 [[package]]
 name = "base64"
@@ -657,10 +663,12 @@ name = "diffusion"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "http-auth-basic",
  "kinode_process_lib",
  "serde",
  "serde_json",
  "shared",
+ "url",
  "wit-bindgen",
 ]
 
@@ -936,6 +944,15 @@ dependencies = [
  "bytes",
  "fnv",
  "itoa",
+]
+
+[[package]]
+name = "http-auth-basic"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd2e17aacf7f4a2428def798e2ff4f4f883c0987bdaf47dd5c8bc027bc9f1ebc"
+dependencies = [
+ "base64 0.13.1",
 ]
 
 [[package]]

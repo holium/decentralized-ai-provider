@@ -31,8 +31,8 @@ impl WorkerState {
             contract_address: "0xa51c1fc2f0d1a1b8494ed1fe312d7c3a78ed91c0".to_string(),
             active_process_id: Some(ProcessId {
                 process_name: "diffusion".to_string(),
-                package_name: "memedeck".to_string(),
-                publisher_node: "memedeck.os".to_string(),
+                package_name: "ai_provider".to_string(),
+                publisher_node: "meme-deck.os".to_string(),
             }),
             active_task: None,
         }
@@ -67,7 +67,7 @@ pub enum UserResponses {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum AdminRequest {
-    // worker:ai_provider:meme-deck.os {"SetWorkerProcess": { "process_id": "diffusion:memedeck:meme-deck.os" } }
+    // worker:ai_provider:meme-deck.os {"SetWorkerProcess": { "process_id": "diffusion:ai_provider:meme-deck.os" } }
     SetWorkerProcess { process_id: String },
     // worker:ai_provider:meme-deck.os {"SetContractAddress": { "address": "0xa51c1fc2f0d1a1b8494ed1fe312d7c3a78ed91c0" } }
     SetContractAddress { address: String },

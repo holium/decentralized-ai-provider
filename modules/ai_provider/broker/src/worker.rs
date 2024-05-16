@@ -72,9 +72,17 @@ pub fn handle_worker_request(
                 task.status = TaskStatus::Running;
             }
         }
+        // when a worker tells us that they finished a task, automatically add them to
         WorkerToBrokerRequests::TaskComplete { task_id, .. } => {
             println!("---> TaskComplete: {:?}", task_id);
             state.ongoing_tasks.remove(&task_id);
+            if state.waiting_workers.contains(&source) {
+                Request::to(message.source())
+                    .body(serde_json::to_vec(&WorkerResponses::AlreadyWaiting)?)
+                    .send()?;
+            } else {
+                state.add_waiting_worker(&source);
+            }
         }
     }
     Ok(())

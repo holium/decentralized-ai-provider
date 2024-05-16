@@ -4,8 +4,14 @@ use serde_json::Value;
 use serde_json::json;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub enum ProcessToWorkerRequests {
+    TaskUpdate { task_id: String }, // comes with blob_bytes
+    TaskComplete { task_id: String },
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum WorkerToProcessRequests {
-    StartTask(Value),// the message that this worker:ai_provider process sends to whatever
+    StartTask { task_id: TaskId, params: Value },// the message that this worker:ai_provider process sends to whatever
                      // active_process is currently assigned. (diffusion:ai_provider for now)
 }
 

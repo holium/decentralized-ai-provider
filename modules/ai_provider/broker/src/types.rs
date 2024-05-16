@@ -179,7 +179,7 @@ impl OnChainState {
 // --------------------------
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum UserRequests {
-    // broker:ai_provider:meme-deck.os { "RequestTask": { "process_id": "diffusion:memedeck:memedeck.os", "task_parameters": { "workflow": "basic" } } }
+    // broker:ai_provider:meme-deck.os { "RequestTask": { "process_id": "diffusion:ai_provider:meme-deck.os", "task_parameters": { "workflow": "basic" } } }
     RequestTask {
         process_id: String,
         task_parameters: Value,
@@ -256,7 +256,7 @@ pub enum WorkerResponses {
 // --------------------------
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum AdminRequest {
-    // broker:ai_provider:meme-deck.os {"SetWorkerProcess": { "process_id": "diffusion:memedeck:memedeck.os" } }
+    // broker:ai_provider:meme-deck.os {"SetWorkerProcess": { "process_id": "diffusion:ai_provider:meme-deck.os" } }
     SetWorkerProcess { process_id: String },
     // broker:ai_provider:meme-deck.os {"SetContractAddress": { "address": "0x5fbdb2315678afecb367f032d93f642f64180aa3" } }
     SetContractAddress { address: String },
@@ -266,7 +266,7 @@ pub enum AdminRequest {
     GetState,
     // broker:ai_provider:meme-deck.os "SyncChainState"
     SyncChainState,
-    // m our@broker:ai_provider:meme-deck.os {"RegisterBroker": {"process_id": "diffusion:memedeck:memedeck.os" }}
+    // m our@broker:ai_provider:meme-deck.os {"RegisterBroker": {"process_id": "diffusion:ai_provider:meme-deck.os" }}
     RegisterBroker { process_id: String },
 }
 

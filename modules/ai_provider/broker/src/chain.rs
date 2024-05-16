@@ -48,8 +48,8 @@ pub fn register_broker(our: &str, process_id: String) -> Result<(),()> {
     let provider = Provider::new(31337, 5);
 
     let input = registerBrokerCall {
-        processId: process_id,//: String::from("diffusion:memedeck:memedeck.os"),
-        brokerKnsId: our.into(),//"memedeck:memedeck.os".into(),
+        processId: process_id,//: String::from("diffusion:ai_provider:meme-deck.os"),
+        brokerKnsId: our.into(),
     };
     let tx_input = TransactionInput {
         data: Some(input.abi_encode().into()),
