@@ -1,7 +1,7 @@
 use kinode_process_lib::{
     await_message, call_init, println, set_state, get_typed_state, get_blob,
     Address, Message, Request, ProcessId, //Response, 
-    http, vfs,
+    http//, vfs,
 };
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
@@ -61,8 +61,6 @@ enum AdminRequest {
     SetComfyUI { host: String, port: u16, client_id: u32, scheme: Option<String> },
 }
 
-type Nodes = HashMap<String, Node>;
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Node {
     inputs: HashMap<String, Value>,
@@ -91,11 +89,13 @@ fn init(our: Address) {
     println!("starting diffusion:ai_provider, which needs to be setup to talk to a comfyui instance");
     let mut state: State = State::load();
 
-    let data_dir = vfs::create_drive(our.package_id(), "data", None).unwrap();
-    let images_dir = vfs::create_drive(our.package_id(), "images", None).unwrap();
-
     loop {
-        match handle_message(&our, &mut state, &data_dir, &images_dir) {
+        let message = await_message();
+        let Ok(message) = message else {
+            println!("{}: error: {:?}", our.process(), message);
+            continue;
+        };
+        match handle_message(&our, &mut state, &message) {
             Err(e) => println!("{e}"),
             Ok(_) => (),
         };
@@ -109,69 +109,63 @@ fn init(our: Address) {
 fn handle_message(
     our: &Address,
     state: &mut State,
-    data_dir: &str,
-    images_dir: &str,
+    message: &Message,
 ) -> anyhow::Result<()> {
-    match await_message() {
-        Ok(message) => {
-            if message.is_request() {
-                if message.source().node == our.node {
-                    // handle AdminRequest 
-                    if let Ok(req) = serde_json::from_slice::<AdminRequest>(message.body()) {
-                        match req {
-                            AdminRequest::GetState => println!("{}", serde_json::to_string_pretty(&state).unwrap()),
-                            AdminRequest::SetComfyUI { host, port, client_id, scheme } => {
-                                match scheme {
-                                    None => (),
-                                    Some(s) => state.comfyui_scheme = s,
-                                };
-                                state.comfyui_host = host;
-                                state.comfyui_port = port;
-                                if client_id == 0 {
-                                    println!("warning: setting client_id to 0 is invalid");
-                                }
-                                state.comfyui_client_id = client_id;
-                                println!("updated comfyui connection details");
-                            }
+    if message.is_request() {
+        if message.source().node == our.node {
+            // handle AdminRequest 
+            if let Ok(req) = serde_json::from_slice::<AdminRequest>(message.body()) {
+                match req {
+                    AdminRequest::GetState => println!("{}", serde_json::to_string_pretty(&state).unwrap()),
+                    AdminRequest::SetComfyUI { host, port, client_id, scheme } => {
+                        match scheme {
+                            None => (),
+                            Some(s) => state.comfyui_scheme = s,
+                        };
+                        state.comfyui_host = host;
+                        state.comfyui_port = port;
+                        if client_id == 0 {
+                            println!("warning: setting client_id to 0 is invalid");
                         }
-                        return Ok(());
+                        state.comfyui_client_id = client_id;
+                        println!("updated comfyui connection details");
                     }
-
-                    // handle WorkerToProcessRequest
-                    if let Ok(req) = serde_json::from_slice::<WorkerToProcessRequests>(message.body()) {
-                        return match req {
-                            WorkerToProcessRequests::StartTask { task_id, params } => {
-                                println!("got StartTask with value: {}", serde_json::to_string_pretty(&params).unwrap());
-                                if !state.is_ready() {
-                                    println!("this process is not ready to handle tasks yet. please setup comfyui details with SetComfyUI command");
-                                    Err(anyhow::anyhow!("missing comfyui setup"))
-                                } else {
-                                    let task_details: GenerateImageTask = serde_json::from_value(params).unwrap();
-                                    serve_job(
-                                        our,
-                                        &message,
-                                        state,
-                                        message.source().process.clone(),
-                                        task_details,
-                                        task_id,
-                                        data_dir,
-                                        images_dir,
-                                    )
-                                }
-                            },
-                        }
-                    }
-
-                    Err(anyhow::anyhow!("unkown message"))
-                } else {
-                    println!("got a message from foreign node {}, which we will ignore.", message.source().node.to_string());
-                    Err(anyhow::anyhow!("unknown message"))
                 }
-            } else {
-                Err(anyhow::anyhow!("not a request"))
+                return Ok(());
             }
-        },
-        Err(e) => Err(anyhow::anyhow!("{}",e)),
+
+            // handle WorkerToProcessRequest
+            if let Ok(req) = serde_json::from_slice::<WorkerToProcessRequests>(message.body()) {
+                return match req {
+                    WorkerToProcessRequests::StartTask { task_id, params, process_id, broker, } => {
+                        println!("got StartTask with value: {}", serde_json::to_string(&params).unwrap());
+                        if !state.is_ready() {
+                            println!("this process is not ready to handle tasks yet. please setup comfyui details with SetComfyUI command");
+                            Err(anyhow::anyhow!("missing comfyui setup"))
+                        } else {
+                            let task_details: GenerateImageTask = serde_json::from_value(params).unwrap();
+                            serve_job(
+                                our,
+                                &message,
+                                state,
+                                message.source().process.clone(),
+                                task_details,
+                                task_id,
+                                &process_id,
+                                broker,
+                            )
+                        }
+                    },
+                }
+            }
+
+            Err(anyhow::anyhow!("unkown message"))
+        } else {
+            println!("got a message from foreign node {}, which we will ignore.", message.source().node.to_string());
+            Err(anyhow::anyhow!("unknown message"))
+        }
+    } else {
+        Err(anyhow::anyhow!("not a request"))
     }
 }
 
@@ -200,8 +194,8 @@ fn serve_job(
     source_process: ProcessId,
     task_details: GenerateImageTask,
     task_id: String,
-    data_dir: &str,
-    images_dir: &str,
+    process_id: &str,
+    broker: Address,
 ) -> anyhow::Result<()> {
     state.is_working = true;
 
@@ -210,7 +204,7 @@ fn serve_job(
         "{}://{}/ws?clientId={}",
         if state.comfyui_scheme == "https" { "wss" } else { "ws" },
         state.comfyui_host,
-        task_details.client_id,
+        state.comfyui_client_id
     );
     let parsed_url = url::Url::parse(&url)?;
     let auth_header = Credentials::new(parsed_url.username(), parsed_url.password().unwrap());
@@ -255,7 +249,7 @@ fn serve_job(
     let mut progress = 0;
     loop {
         let message = await_message()?;
-        let result = handle_message(&our, state, data_dir, images_dir);
+        let result = handle_message(&our, state, &message);
         let source = message.source();
         if result.is_ok()
         || !message.is_request()
@@ -268,6 +262,7 @@ fn serve_job(
                     let blob_bytes = &get_blob().unwrap().bytes;
                     let update: ComfyUpdate = serde_json::from_slice(&blob_bytes)?;
                     if update.type_ == "executing" {
+                        println!("executing: {}", String::from_utf8_lossy(&blob_bytes));
                         let update: ComfyUpdateExecuting = serde_json::from_slice(&blob_bytes)?;
                         if update.data.prompt_id.unwrap_or("".into()) == prompt_id {
                             if update.data.node.is_none() {
@@ -278,8 +273,11 @@ fn serve_job(
                         }
                     } else if update.type_ == "status" {
                         println!("status: {}", String::from_utf8_lossy(&blob_bytes));
+                    } else {
+                        println!("unknown type: {}", String::from_utf8_lossy(&blob_bytes));
                     }
                 } else if message_type == http::WsMessageType::Binary {
+                    println!("progress: {progress}");
                     progress += 1;
 
                     let is_final = current_node == task_details.final_node_id;
@@ -328,7 +326,7 @@ fn serve_job(
             }
 
             http::HttpClientRequest::WebSocketClose { channel_id: _ } => {
-                //println!("got ws close");
+                println!("got ws close");
             }
         }
     }
@@ -336,8 +334,13 @@ fn serve_job(
     http::close_ws_connection(state.comfyui_client_id.clone())?;
 
     Request::to(address)
-        .body(serde_json::to_vec(&ProcessToWorkerRequests::TaskComplete { task_id })?)
+        .body(serde_json::to_vec(&ProcessToWorkerRequests::TaskComplete {
+            task_id,
+            process_id: process_id.into(),
+            broker
+        })?)
         .send()?;
+    println!("sending done to worker process");
     state.is_working = false;
     Ok(())
 }

@@ -1,4 +1,5 @@
 use kinode_process_lib::ProcessId;
+use kinode_process_lib::Address;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_json::json;
@@ -6,13 +7,23 @@ use serde_json::json;
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum ProcessToWorkerRequests {
     TaskUpdate { task_id: String }, // comes with blob_bytes
-    TaskComplete { task_id: String },
+    TaskComplete {
+        task_id: String,
+        process_id: String,
+        broker: Address
+    },
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum WorkerToProcessRequests {
-    StartTask { task_id: TaskId, params: Value },// the message that this worker:ai_provider process sends to whatever
-                     // active_process is currently assigned. (diffusion:ai_provider for now)
+    // the message that this worker:ai_provider process sends to whatever
+    // active_process is currently assigned. (diffusion:ai_provider for now)
+    StartTask {
+        task_id: TaskId,
+        params: Value,
+        process_id: String,
+        broker: Address,
+    },
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

@@ -69,18 +69,9 @@ pub fn handle_broker_request(
                     .target((our.node(), state.active_process_id.clone().unwrap()))
                     .body(serde_json::to_vec(&WorkerToProcessRequests::StartTask {
                         params: task.parameters.task_parameters.clone(),
-                        task_id: task_id.clone()
-                    })?)
-                    .send()?;
-
-                // TODO: wait for the active_process to tell us that the task is finished before we
-                // tell the broker TaskComplete, which will then automatically add us back to the
-                // waiting workers queue
-                Request::new()
-                    .target(message.source())
-                    .body(serde_json::to_vec(&WorkerToBrokerRequests::TaskComplete {
+                        task_id: task_id.clone(),
                         process_id: process_id.to_string(),
-                        task_id,
+                        broker: message.source().clone(),
                     })?)
                     .send()?;
             }
@@ -89,3 +80,4 @@ pub fn handle_broker_request(
         }
     }
 }
+

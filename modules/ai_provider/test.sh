@@ -1,3 +1,5 @@
+#kit update
+
 echo "killing old screens"
 screen -S anvil -p 0 -X stuff $(printf \\003)
 screen -S broker-1 -p 0 -X stuff $(printf \\004)
