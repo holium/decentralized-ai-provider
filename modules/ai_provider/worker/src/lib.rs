@@ -10,7 +10,7 @@ use shared::ProcessToWorkerRequests;
 use shared::WorkerToBrokerRequests;
 
 wit_bindgen::generate!({
-    path: "wit",
+    path: "target/wit",
     world: "process",
 });
 

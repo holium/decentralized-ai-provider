@@ -11,7 +11,7 @@ use serde_json::Value;
 use http_auth_basic::Credentials;
 
 wit_bindgen::generate!({
-    path: "wit",
+    path: "target/wit",
     world: "process",
 });
 call_init!(init);

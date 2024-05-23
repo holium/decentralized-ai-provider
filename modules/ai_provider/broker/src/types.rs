@@ -54,6 +54,7 @@ impl State {
             }
         }
     }
+
     pub fn default() -> Self {
         Self {
             task_queue: HashMap::new(),
@@ -172,6 +173,13 @@ impl OnChainState {
             payment_period_hours: 1,
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GenerateRequest {
+    pub signature: String,
+    pub task: Value,
+    pub process_id: String,
 }
 
 // --------------------------

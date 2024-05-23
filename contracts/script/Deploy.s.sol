@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity >=0.8.21 <0.9.0;
+pragma solidity >=0.8.25 <0.9.0;
 
 import { AppRegistry } from "../src/AppRegistry.sol"; // Adjust this path as necessary
 import "../src/interfaces/IAppRegistry.sol";
@@ -31,11 +31,14 @@ contract Deploy is BaseScript {
         // Register a sample application
         string memory appId = "memedeck:memedeck.os";
         string memory appName = "MemeDeck";
+        address[] memory whitelist = new address[](1);
+        whitelist[0] = address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8);// pre-funded anvil address
         address governanceToken = address(1); // Example token address
         address usageToken = address(2); // Example token address
 
-        appRegistry.registerApplication(appId, appName, governanceToken, usageToken);
+        appRegistry.registerApplication(appId, appName, whitelist, governanceToken, usageToken);
         console2.log("Application registered:", appId, appName);
+        console2.log("with whitelist:", whitelist[0]);
 
         // Register a sample process under the registered application
         string memory processId = "diffusion:ai_provider:meme-deck.os";

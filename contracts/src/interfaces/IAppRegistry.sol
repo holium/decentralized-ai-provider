@@ -7,6 +7,7 @@ struct ApplicationRecord {
     string name;
     address governanceToken;
     address usageToken;
+    address[] whitelist;
 }
 
 struct ProcessRecord {

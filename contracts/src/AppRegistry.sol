@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.21 <0.9.0;
+pragma solidity >=0.8.25 <0.9.0;
 
 // import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./interfaces/IAppRegistry.sol";
@@ -56,6 +56,7 @@ contract AppRegistry is OwnableUpgradeable {
     function registerApplication(
         string memory appId,
         string memory name,
+        address[] memory whitelist,
         address governanceToken,
         address usageToken
     ) external payable {
@@ -67,6 +68,7 @@ contract AppRegistry is OwnableUpgradeable {
         app.name = name;
         app.governanceToken = governanceToken;
         app.usageToken = usageToken;
+        app.whitelist = whitelist;
         appIds.push(appId);
 
         emit ApplicationRegistered(appId);
