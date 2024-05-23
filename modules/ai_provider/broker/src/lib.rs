@@ -94,7 +94,7 @@ fn handle_http_request(our: &Address, message: &Message, state: &mut State) -> a
                             process_id,
                             task_id: task_id.clone(),
                             from_broker: our.to_string(),
-                            from_user: message.source().node().to_string(),
+                            from_user: account,
                             task_parameters: parsed_request.task.clone(),
                         };
 
