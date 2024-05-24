@@ -60,7 +60,7 @@ screen -S worker-1 -p 0 -X stuff "m our@diffusion:ai_provider:meme-deck.os '{\"S
 screen -S worker-1 -p 0 -X stuff "m our@worker:ai_provider:meme-deck.os '{\"SetContractAddress\": {\"address\": \"0xa51c1fc2f0d1a1b8494ed1fe312d7c3a78ed91c0\"}}'$(printf \\r)"
 screen -S worker-1 -p 0 -X stuff "m our@worker:ai_provider:meme-deck.os '{\"SetIsReady\": {\"is_ready\": true}}'$(printf \\r)"
 
-if [ ! -z "$2" ]
+if [ -z "$2" ] # if the 2nd argument is null, we assume they DO want to kick off the default diffusion test job. they have to pass something for us to know they want to skip it
   then
     # finally, kick off the test comfy diffusion generation job
     echo "kicking off the diffusion job defined in test.json"
