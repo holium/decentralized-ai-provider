@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.25 <0.9.0;
+pragma solidity >=0.8.21 <0.9.0;
 
 // import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./interfaces/IAppRegistry.sol";
@@ -140,12 +140,14 @@ contract AppRegistry is OwnableUpgradeable {
     }
 
     // broker functions
-    function registerBroker(string calldata processId, string calldata brokerKnsId) external {
+    function registerBroker(string calldata processId, string calldata brokerKnsId, string calldata reachableUrl) external {
         // create new broker
         Broker storage broker = brokers[brokerKnsId];
         broker.brokerAddress = msg.sender;
         broker.brokerKnsId = brokerKnsId;
+        broker.reachableUrl = reachableUrl;
         console2.log("brokerKnsId: %s", broker.brokerKnsId);
+        console2.log("reachableUrl: %s", broker.reachableUrl);
         processIdToBrokers[processId].push(broker);
         // emit BrokerRegistered(brokerKnsId, processId);
     }

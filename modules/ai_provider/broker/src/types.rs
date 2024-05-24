@@ -5,6 +5,7 @@ use std::collections::{HashMap, HashSet};
 use kinode_process_lib::{get_typed_state, println, set_state, Address, ProcessId};
 use crate::chain::{ApplicationRecord, Broker, ProcessRecord, Worker};
 use shared::{TaskId, TaskParameters, Task};
+use alloy_signer::Signature;
 
 // --- State of the broker ---
 // ---------------------------
@@ -177,8 +178,8 @@ impl OnChainState {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct GenerateRequest {
-    pub signature: String,
-    pub task: Value,
+    pub signature: Signature,
+    pub task: String,
     pub process_id: String,
 }
 

@@ -28,10 +28,12 @@ contract AppRegistryTest is PRBTest, StdCheats {
         vm.startPrank(owner);
         string memory appId = "memedeck.os";
         string memory appName = "MemeDeck";
+        address[] memory whitelist = new address[](1);
+        whitelist[0] = address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8);// pre-funded anvil address
         address governanceToken = address(1);
         address usageToken = address(2);
 
-        appRegistry.registerApplication{ value: 0.01 ether }(appId, appName, governanceToken, usageToken);
+        appRegistry.registerApplication{ value: 0.01 ether }(appId, appName, whitelist, governanceToken, usageToken);
         vm.stopPrank();
     }
 }

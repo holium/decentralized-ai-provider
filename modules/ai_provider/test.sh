@@ -1,11 +1,15 @@
 #kit update
-runtime_dir=/Users/tenari/code/kinode
-if [ ! -z "$1" ]
+echo "usage: ./test.sh ~/path/to/kinode [optional: no-job] [optional: no-kit-chain]"
+
+if [ -z "$1" ]
   then
+    echo "must specify runtime_dir as first argument to this script (the path to the dir containing the kinode runtime)"
+    exit 1
+else
     runtime_dir=$1
 fi
 use_kit_chain=true
-if [ ! -z "$2" ]
+if [ ! -z "$3" ]
   then
     echo "not using kit chain"
     use_kit_chain=""
@@ -55,13 +59,20 @@ screen -S worker-1 -p 0 -X stuff "m our@diffusion:ai_provider:meme-deck.os '{\"S
 # setup the worker process to indicate to the broker that it is ready
 screen -S worker-1 -p 0 -X stuff "m our@worker:ai_provider:meme-deck.os '{\"SetContractAddress\": {\"address\": \"0xa51c1fc2f0d1a1b8494ed1fe312d7c3a78ed91c0\"}}'$(printf \\r)"
 screen -S worker-1 -p 0 -X stuff "m our@worker:ai_provider:meme-deck.os '{\"SetIsReady\": {\"is_ready\": true}}'$(printf \\r)"
-# finally, kick off the test comfy diffusion generation job
-#test_job=`cat test.json | tr -d '\n'`
-#command="m our@broker:ai_provider:meme-deck.os '{\"RequestTask\": {\"process_id\": \"diffusion:ai_provider:meme-deck.os\", \"task_parameters\": $test_job}}'"
-#echo $command > /tmp/kinode-test-command.txt
-#sleep 1
-#screen -S broker-1 -p 0 -X readbuf /tmp/kinode-test-command.txt
-#sleep 1
-#screen -S broker-1 -p 0 -X paste .
-#sleep 1
-#screen -S broker-1 -p 0 -X stuff "$(printf \\r)"
+
+if [ ! -z "$2" ]
+  then
+    # finally, kick off the test comfy diffusion generation job
+    echo "kicking off the diffusion job defined in test.json"
+    test_job=`cat test.json | tr -d '\n'`
+    command="m our@broker:ai_provider:meme-deck.os '{\"RequestTask\": {\"process_id\": \"diffusion:ai_provider:meme-deck.os\", \"task_parameters\": $test_job}}'"
+    echo $command > /tmp/kinode-test-command.txt
+    sleep 1
+    screen -S broker-1 -p 0 -X readbuf /tmp/kinode-test-command.txt
+    sleep 1
+    screen -S broker-1 -p 0 -X paste .
+    sleep 1
+    screen -S broker-1 -p 0 -X stuff "$(printf \\r)"
+  else
+    echo "not kicking off a diffusion job"
+fi

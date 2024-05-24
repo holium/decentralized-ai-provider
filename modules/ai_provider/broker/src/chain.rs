@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 
 // 0xa51c1fc2f0d1a1b8494ed1fe312d7c3a78ed91c0
 static CONTRACT_ADDRESS: EthAddress = EthAddress::new([
-//    0xa5,0x1c, 0x1f, 0xc2, 0xf0, 0xd1, 0xa1, 0xb8, 0x49, 0x4e, 0xd1, 0xfe, 0x31, 0x2d, 0x7c, 0x3a, 0x78, 0xed, 0x91, 0xc0, 
-    0x22, 0x79, 0xb7, 0xa0, 0xa6, 0x7d, 0xb3, 0x72, 0x99, 0x6a, 0x5f, 0xab, 0x50, 0xd9, 0x1e, 0xaa, 0x73, 0xd2, 0xeb, 0xe6,
+    0xa5,0x1c, 0x1f, 0xc2, 0xf0, 0xd1, 0xa1, 0xb8, 0x49, 0x4e, 0xd1, 0xfe, 0x31, 0x2d, 0x7c, 0x3a, 0x78, 0xed, 0x91, 0xc0, 
+//    0x22, 0x79, 0xb7, 0xa0, 0xa6, 0x7d, 0xb3, 0x72, 0x99, 0x6a, 0x5f, 0xab, 0x50, 0xd9, 0x1e, 0xaa, 0x73, 0xd2, 0xeb, 0xe6,
 ]);
 
 sol! {
@@ -31,6 +31,7 @@ sol! {
     struct Broker {
         string brokerKnsId;
         address brokerAddress;
+        string reachableUrl;
     }
 
     #[derive(Debug, Serialize, Deserialize)]
@@ -43,7 +44,7 @@ sol! {
     function getProcesses() external view returns (ProcessRecord[] memory) {}
     function getProcessBrokers(string memory processId) external view returns (Broker[] memory) {}
     function getProcessWorkers(string memory processId) external view returns (Worker[] memory) {}
-    function registerBroker(string calldata processId, string calldata brokerKnsId) external;
+    function registerBroker(string calldata processId, string calldata brokerKnsId, string calldata reachableUrl) external;
 }
 
 pub fn register_broker(our: &str, process_id: String) -> Result<(),()> {
@@ -52,6 +53,7 @@ pub fn register_broker(our: &str, process_id: String) -> Result<(),()> {
     let input = registerBrokerCall {
         processId: process_id,//: String::from("diffusion:ai_provider:meme-deck.os"),
         brokerKnsId: our.into(),
+        reachableUrl: String::from("http://localhost:8082"),
     };
     let tx_input = TransactionInput {
         data: Some(input.abi_encode().into()),

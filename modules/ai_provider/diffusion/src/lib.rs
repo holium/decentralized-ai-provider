@@ -82,6 +82,8 @@ pub struct GenerateImageTask {
     user_config: Value,
     dimensions: (i64, i64),
     prompt: String,
+    meme_id: String,
+    panel_id: String,
     callback_url: Option<String>, // url to send blurry-partially-generated images back along
 }
 
@@ -303,6 +305,8 @@ fn serve_job(
                             },
                             "dimensions": task_details.dimensions,
                             "prompt": task_details.prompt,
+                            "meme_id": task_details.meme_id,
+                            "panel_id": task_details.panel_id,
                         });
                         let mut headers = HashMap::new();
                         headers.insert("Content-Type".to_string(), "application/json".to_string());

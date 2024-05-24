@@ -12,7 +12,6 @@ use user::handle_user_request;
 use worker::handle_worker_request;
 use crate::worker::assign_tasks_to_waiting_workers;
 use std::collections::HashMap;
-use web3::signing::{keccak256, recover};
 use shared::TaskParameters;
 use uuid::Uuid;
 
@@ -60,14 +59,12 @@ fn handle_http_request(our: &Address, message: &Message, state: &mut State) -> a
     headers.insert("Content-Type".to_string(), "application/json".to_string());
 
     if let HttpServerRequest::Http(request) = server_request {
-        let r_path = request.path()?;
-        let r_path = r_path.as_str();
         let b_path = request.bound_path(Some(&our.process.to_string()));
         if request.method()?.as_str() == "POST" && b_path == "/generate_image" {
             // we validate that they actually have the right to generate an image by checking the `signature` property they sent against
             // the addresses that are whitelisted onchain
             // we expect the signature to be the whole minified json body of the task request so the overall request format is like:
-            // {signature: "...", task: {...}}
+            // {signature: "...", task: {...}, process_id: "diffusion:ai_broker:meme-deck.os"}
             // if the signature matches some whitelisted address on chain, then it's all good and we can StartTask just like if a user
             // requested through the kinode console directly
             let Some(blob) = get_blob() else {
@@ -76,16 +73,14 @@ fn handle_http_request(our: &Address, message: &Message, state: &mut State) -> a
             let parsed_request = serde_json::from_slice::<GenerateRequest>(&blob.bytes)?;
             for app in state.on_chain_state.apps.values() {
                 for address in &app.whitelist {
-                    println!("checking address: {}", address);
+                    //println!("checking address: {}", address);
                     let account = address.to_string();
-                    let formatted_message = parsed_request.task.to_string();
-                    let formatted_message = eth_message(formatted_message);
-                    let signature = hex::decode(&parsed_request.signature)?;
-                    let recovery_id = signature[64] as i32 - 27;
-                    let pubkey = recover(&formatted_message, &signature[..64], recovery_id)?;
-                    let pubkey = format!("{:02X?}", pubkey);
+                    let message_that_was_signed = parsed_request.task.clone();
+                    //println!("original message: {message_that_was_signed}");
+                    let pubkey = parsed_request.signature.recover_address_from_msg(message_that_was_signed)?;
 
-                    if pubkey == account {
+                    //println!("recovered address = {:?} to_string: {}", pubkey, pubkey.to_string());
+                    if pubkey.to_string() == account {
                         // we have finally found a whitelisted account
                         // that matches the signature on the request
                         let task_id = Uuid::new_v4().to_string();
@@ -95,13 +90,13 @@ fn handle_http_request(our: &Address, message: &Message, state: &mut State) -> a
                             task_id: task_id.clone(),
                             from_broker: our.to_string(),
                             from_user: account,
-                            task_parameters: parsed_request.task.clone(),
+                            task_parameters: serde_json::from_str(&parsed_request.task)?,
                         };
 
                         state.add_task(task_id.clone(), our.clone(), task);
                         println!(
                             "---> task: {}",
-                            serde_json::to_string_pretty(&state.task_queue).unwrap()
+                            serde_json::to_string(&state.task_queue).unwrap()
                         );
                         return match assign_tasks_to_waiting_workers(state) {
                             Ok(_) => Ok(send_response(StatusCode::OK, Some(headers.clone()), serde_json::to_vec(&serde_json::json!({"result":"task_accepted"}))?)),
@@ -138,17 +133,5 @@ fn init(our: Address) {
         }
         state.save().unwrap();
     }
-}
-
-pub fn eth_message(message: String) -> [u8; 32] {
-    keccak256(
-        format!(
-            "{}{}{}",
-            "\x19Ethereum Signed Message:\n",
-            message.len(),
-            message
-        )
-        .as_bytes(),
-    )
 }
 

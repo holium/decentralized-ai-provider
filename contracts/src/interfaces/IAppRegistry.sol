@@ -23,6 +23,7 @@ struct Worker {
 struct Broker {
     string brokerKnsId;
     address brokerAddress;
+    string reachableUrl;
 }
 
 interface IAppRegistry {
@@ -41,7 +42,7 @@ interface IAppRegistry {
 
     function removeWorker(string memory appId, string memory workerKnsId) external;
 
-    function registerBroker(string memory appId, string memory brokerKnsId, address brokerAddress) external;
+    function registerBroker(string memory appId, string memory brokerKnsId, string memory reachableUrl) external;
 
     function removeBroker(string memory appId, string memory brokerKnsId) external;
 
