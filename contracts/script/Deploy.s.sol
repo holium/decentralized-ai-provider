@@ -29,7 +29,7 @@ contract Deploy is BaseScript {
 
     function registerSampleData() internal {
         // Register a sample application
-        string memory appId = "memedeck:memedeck.os";
+        string memory appId = "memedeck:meme-deck.os";
         string memory appName = "MemeDeck";
         address[] memory whitelist = new address[](1);
         whitelist[0] = address(0x70997970C51812dc3A010C7d01b50e0d17dc79C8);// pre-funded anvil address

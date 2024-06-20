@@ -1,15 +1,8 @@
 #kit update
-echo "usage: ./test.sh ~/path/to/kinode [optional: no-job] [optional: no-kit-chain]"
+echo "usage: ./test.sh [optional: no-job] [optional: no-kit-chain]"
 
-if [ -z "$1" ]
-  then
-    echo "must specify runtime_dir as first argument to this script (the path to the dir containing the kinode runtime)"
-    exit 1
-else
-    runtime_dir=$1
-fi
 use_kit_chain=true
-if [ ! -z "$3" ]
+if [ ! -z "$2" ]
   then
     echo "not using kit chain"
     use_kit_chain=""
@@ -40,10 +33,9 @@ forge build
 forge script script/Deploy.s.sol --broadcast --rpc-url http://localhost:8545
 cd ../modules/ai_provider
 sleep 1
-echo $runtime_dir
-screen -d -m -S broker-1 kit boot-fake-node -p 8082 -f memedeck-broker-1 -h /tmp/memedeck-broker-1 --rpc ws://127.0.0.1:8545 -r $runtime_dir
+screen -d -m -S broker-1 kit boot-fake-node -p 8082 -f memedeck-broker-1 -o /tmp/memedeck-broker-1 --rpc ws://127.0.0.1:8545
 sleep 9
-screen -d -m -S worker-1 kit boot-fake-node -p 8083 -f memedeck-worker-1 -h /tmp/memedeck-worker-1 --rpc ws://127.0.0.1:8545 -r $runtime_dir
+screen -d -m -S worker-1 kit boot-fake-node -p 8083 -f memedeck-worker-1 -o /tmp/memedeck-worker-1 --rpc ws://127.0.0.1:8545
 
 sleep 9 # wait for runtime compile
 
@@ -60,7 +52,7 @@ screen -S worker-1 -p 0 -X stuff "m our@diffusion:ai_provider:meme-deck.os '{\"S
 screen -S worker-1 -p 0 -X stuff "m our@worker:ai_provider:meme-deck.os '{\"SetContractAddress\": {\"address\": \"0xa51c1fc2f0d1a1b8494ed1fe312d7c3a78ed91c0\"}}'$(printf \\r)"
 screen -S worker-1 -p 0 -X stuff "m our@worker:ai_provider:meme-deck.os '{\"SetIsReady\": {\"is_ready\": true}}'$(printf \\r)"
 
-if [ -z "$2" ] # if the 2nd argument is null, we assume they DO want to kick off the default diffusion test job. they have to pass something for us to know they want to skip it
+if [ -z "$1" ] # if the 1st argument is null, we assume they DO want to kick off the default diffusion test job. they have to pass something for us to know they want to skip it
   then
     # finally, kick off the test comfy diffusion generation job
     echo "kicking off the diffusion job defined in test.json"
