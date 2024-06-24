@@ -84,8 +84,12 @@ pub fn handle_worker_request(
 }
 
 pub fn assign_tasks_to_waiting_workers(state: &mut State) -> anyhow::Result<()> {
+    if state.waiting_workers.is_empty() {
+        println!("warning: tried to assign_tasks_to_waiting_workers but there are no waiting workers");
+        return Err(anyhow::anyhow!("no waiting_workers"));
+    }
     if state.task_queue.is_empty() || state.waiting_workers.is_empty() {
-        println!("warning: tried to assign_tasks_to_waiting_workers but queue is empty or there are no waiting workers");
+        println!("warning: tried to assign_tasks_to_waiting_workers but queue is empty");
         return Ok(());
     }
 

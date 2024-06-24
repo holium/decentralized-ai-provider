@@ -5,7 +5,7 @@ mod user;
 mod worker;
 
 use admin::handle_admin_request;
-use kinode_process_lib::{await_message, call_init, println, Address, Message, get_blob};
+use kinode_process_lib::{await_message, call_init, println, Address, Message, get_blob, timer::set_timer,};
 use kinode_process_lib::http::{bind_http_path, HttpServerRequest, send_response, StatusCode};
 use types::{GenerateRequest, State, string_to_process_id};
 use user::handle_user_request;
@@ -44,6 +44,20 @@ fn handle_message(our: &Address, state: &mut State) -> anyhow::Result<(), anyhow
         if message.source().process == "http_server:distro:sys" {
             return handle_http_request(our, &message, state);
         }
+    } else {
+        // the only response we expect is from timer, which we interpret to mean:
+        // "try to assign_tasks"
+        return match assign_tasks_to_waiting_workers(state) {
+            Ok(_) => Ok(()),
+            Err(e) => {
+                if e.to_string() == "no waiting_workers" {
+                    set_timer(500, None); // check again in 500 ms
+                    Ok(())
+                } else {
+                    Err(e)
+                }
+            },
+        };
     }
 
     Ok(())
@@ -98,9 +112,18 @@ fn handle_http_request(our: &Address, message: &Message, state: &mut State) -> a
                             "---> task: {}",
                             serde_json::to_string(&state.task_queue).unwrap()
                         );
+                        let ok_json = serde_json::to_vec(&serde_json::json!({"result":"task_accepted"}))?;
                         return match assign_tasks_to_waiting_workers(state) {
-                            Ok(_) => Ok(send_response(StatusCode::OK, Some(headers.clone()), serde_json::to_vec(&serde_json::json!({"result":"task_accepted"}))?)),
-                            Err(e) => Err(e),
+                            Ok(_) => Ok(send_response(StatusCode::OK, Some(headers.clone()), ok_json)),
+                            Err(e) => {
+                                if e.to_string() == "no waiting_workers" {
+                                    // the task has been queued, just not run yet.
+                                    set_timer(500, None); // this will check in 500ms to try to run the job
+                                    Ok(send_response(StatusCode::OK, Some(headers.clone()), ok_json))
+                                } else {
+                                    Err(e)
+                                }
+                            },
                         }
                     }
                 }
